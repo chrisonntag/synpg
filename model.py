@@ -3,7 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules import Transformer
-    
+
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
 class SynPG(nn.Module):
     def __init__(self, vocab_size, em_size, word_dropout=0.4, dropout=0.1):
         super(SynPG, self).__init__()
@@ -60,7 +63,7 @@ class SynPG(nn.Module):
         max_targ_len = targs.size(1) - 2  # count without <sos> and <eos>
         
         # apply word dropout
-        drop_mask = torch.bernoulli(self.word_dropout*torch.ones(max_sent_len)).bool().cuda()
+        drop_mask = torch.bernoulli(self.word_dropout*torch.ones(max_sent_len)).bool().to(device=torch.device(DEVICE))
         sents = sents.masked_fill(drop_mask, 0)
         
         # sentence, syntax => embedding
@@ -74,14 +77,14 @@ class SynPG(nn.Module):
             en_embeddings.register_hook(self.store_grad_norm)
         
         # do not allow cross attetion
-        src_mask = self.generate_square_mask(max_sent_len, max_synt_len).cuda()
+        src_mask = self.generate_square_mask(max_sent_len, max_synt_len).to(device=torch.device(DEVICE))
         
         # target => embedding
         de_embeddings = self.embedding_decoder(targs[:, :-1]).transpose(0, 1) * np.sqrt(self.em_size)
         de_embeddings = self.pos_encoder(de_embeddings)
         
         # sequential mask
-        tgt_mask = self.transformer.generate_square_subsequent_mask(max_targ_len+1).cuda()
+        tgt_mask = self.transformer.generate_square_subsequent_mask(max_targ_len+1).to(device=torch.device(DEVICE))
         
         # forward
         outputs = self.transformer(en_embeddings, de_embeddings, src_mask=src_mask, tgt_mask=tgt_mask)
@@ -100,7 +103,7 @@ class SynPG(nn.Module):
         max_targ_len = max_len
         
         # output index starts with <sos>
-        idxs = torch.zeros((batch_size, max_targ_len+2), dtype=torch.long).cuda()
+        idxs = torch.zeros((batch_size, max_targ_len+2), dtype=torch.long).to(device=torch.device(DEVICE))
         idxs[:, 0] = 1
         
         # sentence, syntax => embedding
@@ -110,14 +113,14 @@ class SynPG(nn.Module):
         en_embeddings = torch.cat((sent_embeddings, synt_embeddings), dim=0)
         
         # do not allow cross attetion
-        src_mask = self.generate_square_mask(max_sent_len, max_synt_len).cuda()
+        src_mask = self.generate_square_mask(max_sent_len, max_synt_len).to(device=torch.device(DEVICE))
         
         # starting index => embedding
         de_embeddings = self.embedding_decoder(idxs[:, :1]).transpose(0, 1) * np.sqrt(self.em_size)
         de_embeddings = self.pos_encoder(de_embeddings)
         
         # sequential mask
-        tgt_mask = self.transformer.generate_square_subsequent_mask(de_embeddings.size(0)).cuda()
+        tgt_mask = self.transformer.generate_square_subsequent_mask(de_embeddings.size(0)).to(device=torch.device(DEVICE))
         
         # encode
         memory = self.transformer.encoder(en_embeddings, mask=src_mask)
@@ -143,7 +146,7 @@ class SynPG(nn.Module):
             de_embeddings = self.pos_encoder(de_embeddings)
             
             # new sequential mask
-            tgt_mask = self.transformer.generate_square_subsequent_mask(de_embeddings.size(0)).cuda()
+            tgt_mask = self.transformer.generate_square_subsequent_mask(de_embeddings.size(0)).to(device=torch.device(DEVICE))
         
         return idxs[:, 1:]
 

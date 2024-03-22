@@ -10,8 +10,10 @@ payload = '{\
 response, accept = output_fn(
     predict_fn(
         input_fn(payload, "application/json"),
-        model_fn("../")
+        model_fn(".")
     ),
     "application/json"
 )
-json.loads(response).keys()
+
+# print json response
+print(json.loads(response))
