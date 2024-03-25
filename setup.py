@@ -8,6 +8,7 @@ setup(
     author='Christoph Sonntag',
     author_email='author@gmail.com',
     description='A package for syntactic paraphase generation',
+    include_package_data=True,
     packages=find_packages(),
     install_requires=[
     'aiohttp==3.8.6',
@@ -63,5 +64,8 @@ setup(
     'xxhash==3.4.1',
     'yarl==1.9.4',
     'zipp==3.15.0'
-    ]
+    ],
+    package_data={
+        '': ['data/*', 'demo/*', 'scripts/*', 'subwordnmt/*'],
+    }
 )
