@@ -1,6 +1,9 @@
 import os, argparse, codecs
+import sys
 import json
+import pickle
 from urllib.parse import urlsplit
+import synpg.utils as utils
 from synpg.utils import sent2str, synt2str, load_dictionary
 import numpy as np
 import torch
@@ -12,6 +15,7 @@ from tqdm import tqdm
 from pprint import pprint
 
 
+sys.modules['utils'] = utils  # Required for unpickling the dictionary.pkl file. 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 args = {

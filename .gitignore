@@ -1,6 +1,7 @@
 __pycache__/
-model/
-
+model/pretrained_synpg.pt
+model/pretrained_parse_generator.pt
+artifacts/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,python,venv
