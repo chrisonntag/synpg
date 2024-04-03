@@ -1,5 +1,5 @@
 import json
-from inference import model_fn, predict_fn, input_fn, output_fn
+from code.inference import model_fn, predict_fn, input_fn, output_fn
 
 payload = '{\
         "sent": "we will have a picnic if it is a sunny day tomorrow.",\

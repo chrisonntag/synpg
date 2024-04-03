@@ -4,7 +4,3 @@ numpy==1.18.1
 tqdm==4.26.0
 ipdb==0.12.3
 h5py==2.10.0
-Flask==2.0.3
-frozenlist==1.2.0
-fsspec==2022.1.0
-gunicorn==21.2.0

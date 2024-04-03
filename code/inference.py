@@ -58,21 +58,21 @@ def model_fn(model_dir):
     This function is the first to get executed upon a prediction request,
     it loads the model from the disk and returns the model object which will be used later for inference.
     """
-    bpe_codes = codecs.open(model_dir+'/bpe.codes', encoding='utf-8')
-    bpe_vocab = codecs.open(model_dir+'/vocab.txt', encoding='utf-8')
+    bpe_codes = codecs.open(os.path.join(model_dir, 'bpe.codes'), encoding='utf-8')
+    bpe_vocab = codecs.open(os.path.join(model_dir, 'vocab.txt'), encoding='utf-8')
     bpe_vocab = read_vocabulary(bpe_vocab, args['bpe_vocab_thresh'])
     bpe = BPE(bpe_codes, '@@', bpe_vocab, None)
 
     # load dictionary and models
-    dictionary = load_dictionary(model_dir+'/dictionary.pkl')
+    dictionary = load_dictionary(os.path.join(model_dir, 'dictionary.pkl'))
 
     synpg_model = SynPG(len(dictionary), 300, word_dropout=0.4)
-    synpg_model.load_state_dict(torch.load(model_dir+'/pretrained_synpg.pt', map_location=torch.device(DEVICE)))
+    synpg_model.load_state_dict(torch.load(os.path.join(model_dir, 'pretrained_synpg.pt'), map_location=torch.device(DEVICE)))
     synpg_model = synpg_model.to(device=torch.device(DEVICE))
     synpg_model.eval()
 
     pg_model = SynPG(len(dictionary), 300, word_dropout=0.4)
-    pg_model.load_state_dict(torch.load(model_dir+'/pretrained_parse_generator.pt', map_location=torch.device(DEVICE)))
+    pg_model.load_state_dict(torch.load(os.path.join(model_dir, 'pretrained_parse_generator.pt'), map_location=torch.device(DEVICE)))
     pg_model = pg_model.to(device=torch.device(DEVICE))
     pg_model.eval()
 
@@ -138,7 +138,7 @@ def predict_fn(input_data, model):
         synts[:, 0] = 1
         
         for i in range((len(tmpls))):
-            parse_idx = parse_idxs[i].to(device=torch.device(DEVICE)).numpy()
+            parse_idx = parse_idxs[i].cpu().numpy()
             eos_pos = np.where(parse_idx==dictionary.word2idx["<eos>"])[0]
             eos_pos = eos_pos[0]+1 if len(eos_pos) > 0 else len(parse_idx)
             synts[i, 1:eos_pos+1] = parse_idx[:eos_pos]
@@ -154,7 +154,7 @@ def predict_fn(input_data, model):
         
         # generate paraphrases from sentence and generated parses
         output_idxs = synpg_model.generate(sents, synts, args['max_sent_len'], temp=args['temp'])
-        output_idxs = output_idxs.to(device=torch.device(DEVICE)).numpy()
+        output_idxs = output_idxs.cpu().numpy()
         
         
     return output_idxs, dictionary

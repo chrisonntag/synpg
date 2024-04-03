@@ -22,7 +22,48 @@ If you find that the code is useful in your research, please consider citing our
   - [Pretrained SynPG](https://drive.google.com/file/d/1HQGxFb-MW8vnnLRVSOTv9jMRm6HZvYsI/view?usp=sharing)
   - [Pretrained SynPG-Large](https://drive.google.com/file/d/16jfqXUq0bojYIEv-D_-i5SunHn-Qarw5/view?usp=sharing)
   - [Pretrained parse generator](https://drive.google.com/file/d/1XkWpQC1gny6ieYCHS2HIyVXAMR0SUFqi/view?usp=sharing)
-  
+ 
+### AWS
+Add your AWS region and account to the .ENV file in the root directory and export the variables with the following command.
+```
+export $(cat .env | xargs)
+```
+
+```
+# Authenticate Docker to an Amazon ECR registry
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $DOCKER_REG.dkr.ecr.$REGION.amazonaws.com
+
+# Loging to your private Amazon ECR registry
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT.dkr.ecr.$REGION.amazonaws.com
+```
+
+Don't forget to create an access key for the AWC CLI. 
+
+Now build the Docker image and push it to the Amazon ECR registry.
+```
+docker build -t synpg .
+```
+
+```
+# Create the AWS ECR repository
+aws ecr create-repository --repository-name synpg
+
+# Tag the image
+docker tag synpg:latest $ACCOUNT.dkr.ecr.$REGION.amazonaws.com/synpg:latest
+
+# Push the tagged image to the AWS ECR repository
+docker push $ACCOUNT.dkr.ecr.$REGION.amazonaws.com/synpg:latest
+```
+
+When creating the model in the AWS Console, specify the following tags:
+
+Key	Values for MXNet and PyTorch	Values TensorFlow
+SAGEMAKER_PROGRAM	inference.py	inference.py
+SAGEMAKER_SUBMIT_DIRECTORY	/opt/ml/model/code	/opt/ml/model/code
+SAGEMAKER_CONTAINER_LOG_LEVEL	20	20
+SAGEMAKER_REGION	<your region>	<your region>
+MMS_DEFAULT_RESPONSE_TIMEOUT	500	Leave this field blank for TF
+
 ### Demo
 
   - Download [pretrained SynPG](https://drive.google.com/file/d/1HQGxFb-MW8vnnLRVSOTv9jMRm6HZvYsI/view?usp=sharing) or [Pretrained SynPG-Large](https://drive.google.com/file/d/16jfqXUq0bojYIEv-D_-i5SunHn-Qarw5/view?usp=sharing) as well as [pretrained parse generator](https://drive.google.com/file/d/1XkWpQC1gny6ieYCHS2HIyVXAMR0SUFqi/view?usp=sharing), and put them to `./model`
