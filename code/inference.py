@@ -96,15 +96,19 @@ def input_fn(request_body, request_content_type):
     """
     # Check if content type is JSON
     if request_content_type == "application/json":
-        request = json.loads(request_body)
+        payload = json.loads(request_body)
+    elif request_content_type == "application/x-npy":
+        payload = json.loads(str(request_body))
     else:
         raise ValueError(f"Content type {request_content_type} is not supported")
 
-    # Extract the sent, synt and tmpl from the request
-    sent = request["sent"]
-    synt = request["synt"]
-    tmpl = request["tmpl"]
+    if not isinstance(payload, dict):
+        raise ValueError(f"Unexpected response type from json loads: {type(request)}")
 
+    # Extract the sent, synt and tmpl from the request
+    sent = payload["sent"]
+    synt = payload["synt"]
+    tmpl = payload["tmpl"]
 
     return sent, synt, tmpl
 
