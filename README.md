@@ -24,6 +24,7 @@ If you find that the code is useful in your research, please consider citing our
   - [Pretrained parse generator](https://drive.google.com/file/d/1XkWpQC1gny6ieYCHS2HIyVXAMR0SUFqi/view?usp=sharing)
  
 ### AWS
+#### Docker Image
 Add your AWS region and account to the .ENV file in the root directory and export the variables with the following command.
 ```
 export $(cat .env | xargs)
@@ -55,14 +56,32 @@ docker tag synpg:latest $ACCOUNT.dkr.ecr.$REGION.amazonaws.com/synpg:latest
 docker push $ACCOUNT.dkr.ecr.$REGION.amazonaws.com/synpg:latest
 ```
 
+#### Model Artifacts
+Download [pretrained SynPG](https://drive.google.com/file/d/1HQGxFb-MW8vnnLRVSOTv9jMRm6HZvYsI/view?usp=sharing) or [Pretrained SynPG-Large](https://drive.google.com/file/d/16jfqXUq0bojYIEv-D_-i5SunHn-Qarw5/view?usp=sharing) as well as [pretrained parse generator](https://drive.google.com/file/d/1XkWpQC1gny6ieYCHS2HIyVXAMR0SUFqi/view?usp=sharing), and put them to `./model`
+
+Run the following command to create a compressed file with the model artifacts and upload it to your Amazon S3 bucket.
+```
+tar -czvf artifacts/model.tar.gz code/ -C model/ .
+```
+
+This creates the file ```model.tar.gz``` with all the model artifacts from ```./model``` and the ```./code``` directory, which is the 
+desired structure for SageMaker, then located in ```opt/ml/model/```.
+
+Make sure to create a role in the AWS Console, which has the necessary permissions to access the S3 bucket and the SageMaker service. 
 When creating the model in the AWS Console, specify the following tags:
 
-Key	Values for MXNet and PyTorch	Values TensorFlow
-SAGEMAKER_PROGRAM	inference.py	inference.py
-SAGEMAKER_SUBMIT_DIRECTORY	/opt/ml/model/code	/opt/ml/model/code
-SAGEMAKER_CONTAINER_LOG_LEVEL	20	20
-SAGEMAKER_REGION	<your region>	<your region>
-MMS_DEFAULT_RESPONSE_TIMEOUT	500	Leave this field blank for TF
+| Key                           | Values for MXNet and PyTorch | Values TensorFlow       |
+|-------------------------------|------------------------------|--------------------------|
+| SAGEMAKER_PROGRAM            | inference.py                 | inference.py             |
+| SAGEMAKER_SUBMIT_DIRECTORY  | /opt/ml/model/code          | /opt/ml/model/code      |
+| SAGEMAKER_CONTAINER_LOG_LEVEL | 20                          | 20                       |
+| SAGEMAKER_REGION            | <your region>                | <your region>            |
+| MMS_DEFAULT_RESPONSE_TIMEOUT | 500                          | Leave this field blank  |
+
+Replace ```<your region>``` with the appropriate region for your use case. 
+
+#### Deployment and Inference
+To deploy the model, you can either use the AWS Console and create an Endpoint yourself or see check out the Jupyter Notebook ```synpg-aws-serverless-inference.ipynb``` in the ```notebooks``` directory.
 
 ### Demo
 
